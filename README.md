@@ -10,6 +10,17 @@ Built for the Severn Beach operation. TK MAXX, PALL, WICKES, DUNELM and B&M are 
 
 Double click `shift-request.html`. Any browser, desktop or phone. Email the file to a colleague and it works for them too.
 
+## The hosted copy
+
+The repo is connected to Vercel, so every push to `main` republishes the site.
+
+Vercel serves `index.html` at the root of a static deploy, and this project has no `index.html`, so the bare project URL returned Vercel's own 404 page. `vercel.json` fixes it with a rewrite: the root path is served from `shift-request.html`. Both of these work now.
+
+- `https://<project>.vercel.app/`
+- `https://<project>.vercel.app/shift-request.html`
+
+If either one still 404s, the file is not being published at all. Check the project settings: Framework Preset `Other`, Root Directory the repo root, Build Command empty, Output Directory left at the default. A wrong Root Directory is the usual cause.
+
 ## Driver side
 
 Start time comes first, contract second.
@@ -58,7 +69,9 @@ Add the routes you know for certain and leave the rest. A short accurate list be
 
 ## Keeping it safe
 
-Keep the file and any backup off shared drives and off public web hosts. Real contract names, route numbers and store towns are commercially sensitive, and the contract clauses on confidentiality and outside work are easy to trip over by accident.
+Keep any backup off shared drives. Real contract names, route numbers and store towns are commercially sensitive, and the contract clauses on confidentiality and outside work are easy to trip over by accident.
+
+The Vercel copy is public. Anyone with the URL can read the contract names, route numbers and store towns straight out of the page source, and there is no password on a production deployment. The URL is the only control you have, so treat it as shareable with the people who are meant to have that data and nobody else.
 
 ## Checking it still works
 
