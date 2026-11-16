@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Shift Request</title>
+<style>
+  :root {
+    --ink: #121110;
+    --paper: #F5F2EB;
+    --surface: #FFFDF8;
+    --amber: #D97706;
+    --terracotta: #DC2626;
+    --line: rgba(18, 17, 16, 0.14);
+    --line-strong: rgba(18, 17, 16, 0.28);
+    --muted: rgba(18, 17, 16, 0.62);
+    --shadow: 0 1px 2px rgba(18, 17, 16, 0.06), 0 8px 24px rgba(18, 17, 16, 0.06);
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", ui-serif, serif;
+    --radius: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #F2EFE7;
+      --paper: #141312;
+      --surface: #1D1B19;
+      --amber: #E9A23B;
+      --terracotta: #F87171;
+      --line: rgba(242, 239, 231, 0.16);
+      --line-strong: rgba(242, 239, 231, 0.32);
+      --muted: rgba(242, 239, 231, 0.62);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .shell { max-width: 680px; margin: 0 auto; padding: 22px 18px 96px; }
+
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: var(--serif); font-size: 30px; line-height: 1.15;
+    letter-spacing: -0.015em; margin: 0 0 8px; font-weight: 700;
+  }
+
+  .sub { margin: 0; color: var(--muted); font-size: 15px; max-width: 46ch; }
+
+  nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 22px 0 24px; }
+
+  nav.tabs button {
+    appearance: none; background: none; border: 0;
+    border-bottom: 2px solid transparent; color: var(--muted);
+    font: inherit; font-size: 15px; font-weight: 600;
+    padding: 10px 14px 11px; margin-bottom: -1px; cursor: pointer; min-height: 46px;
+  }
+
+  nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--amber); }
+
+  nav.tabs button:focus-visible, button:focus-visible,
+  select:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px;
+  }
+
+  .step { margin-bottom: 22px; }
+
+  .step-label {
+    display: block; font-size: 12px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 8px;
+  }
+
+  select, input[type="text"], input[type="date"], input[type="time"], textarea {
+    width: 100%; min-height: 50px; padding: 12px 14px;
+    font: inherit; font-size: 16px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line-strong); border-radius: var(--radius); appearance: none;
+  }
+
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 22px, calc(100% - 14px) 22px;
+    background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; padding-right: 42px;
+  }
+
+  textarea {
+    min-height: 132px; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 14px; line-height: 1.55; resize: vertical;
+  }
+
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field-row > * { flex: 1 1 180px; min-width: 0; }
+
+  .count {
+    font-size: 14px; color: var(--muted); margin: 0 0 14px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--line);
+  }
+
+  .count:empty { border-bottom: 0; padding-bottom: 0; margin-bottom: 6px; }
+
+  ul.routes { list-style: none; margin: 0; padding: 0; }
+  li.route { border-bottom: 1px solid var(--line); }
+  li.route:first-child { border-top: 1px solid var(--line); }
+
+  .route-btn {
+    appearance: none; width: 100%; text-align: left; background: none; border: 0;
+    color: inherit; font: inherit; padding: 16px 14px 17px; cursor: pointer;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+    min-height: 64px; transition: background 160ms ease-out, transform 160ms ease-out;
+  }
+
+  .route-btn:hover { background: rgba(217, 119, 6, 0.07); transform: translateY(-1px); }
+  .route-btn[aria-pressed="true"] { background: rgba(217, 119, 6, 0.12); }
+
+  .route-main { min-width: 0; }
+
+  .route-name {
+    font-family: var(--serif); font-size: 19px; line-height: 1.3;
+    font-weight: 700; letter-spacing: -0.01em; display: block;
+  }
+
+  .route-meta { display: block; font-size: 13.5px; color: var(--muted); margin-top: 4px; }
+
+  .route-tick {
+    flex: none; width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--line-strong); display: grid; place-items: center;
+    font-size: 13px; color: transparent; align-self: center;
+  }
+
+  .route-btn[aria-pressed="true"] .route-tick {
+    background: var(--amber); border-color: var(--amber); color: #1a1206;
+  }
+
+  .panel { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+
+  .btn {
+    appearance: none; font: inherit; font-size: 16px; font-weight: 600;
+    min-height: 52px; padding: 12px 20px; border-radius: var(--radius);
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+    cursor: pointer;
+    transition: background 160ms ease-out, transform 160ms ease-out, opacity 160ms ease-out;
+  }
+
+  .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn-sm { font-size: 14px; font-weight: 500; min-height: 40px; padding: 8px 14px; }
+  .btn-danger { color: var(--terracotta); }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+  .status { font-size: 14px; color: var(--amber); margin: 10px 0 0; min-height: 20px; }
+
+  h2 {
+    font-family: var(--serif); font-size: 20px; letter-spacing: -0.01em;
+    margin: 32px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+
+  h2:first-of-type { margin-top: 4px; }
+
+  .hint { font-size: 13.5px; color: var(--muted); margin: 10px 0 0; max-width: 58ch; }
+
+  .data-list { list-style: none; margin: 0; padding: 0; }
+
+  .data-list li {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line);
+  }
+
+  .data-list .info { min-width: 0; }
+  .data-list .title { font-weight: 600; font-size: 15px; }
+  .data-list .meta { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .data-list .meta:empty { display: none; }
+  .data-list .title.subdued { font-weight: 500; color: var(--muted); }
+
+  .stop-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .stop-row input[type="text"] { min-height: 46px; }
+  .stop-row .code { flex: 0 1 96px; }
+  .stop-row .town { flex: 1 1 auto; }
+
+  .grid-wrap {
+    overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--surface); -webkit-overflow-scrolling: touch;
+  }
+
+  table.grid { border-collapse: collapse; width: 100%; font-size: 14px; }
+
+  table.grid th, table.grid td {
+    padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  table.grid thead th {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; background: var(--paper);
+    position: sticky; top: 0;
+  }
+
+  table.grid tbody th {
+    font-weight: 600; position: sticky; left: 0; background: var(--surface);
+    border-right: 1px solid var(--line); min-width: 132px;
+  }
+
+  table.grid tr:last-child th, table.grid tr:last-child td { border-bottom: 0; }
+
+  table.grid td.cell { padding: 0; }
+
+  table.grid button.cell-btn {
+    appearance: none; background: none; border: 0; font: inherit; color: inherit;
+    width: 100%; min-height: 46px; min-width: 62px; padding: 10px 12px;
+    cursor: pointer; text-align: left; font-variant-numeric: tabular-nums;
+    transition: background 160ms ease-out;
+  }
+
+  table.grid button.cell-btn:hover { background: rgba(217, 119, 6, 0.12); }
+  table.grid button.cell-btn.empty { color: transparent; }
+  table.grid button.cell-btn.has { font-weight: 600; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  .session {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 14px; border-radius: var(--radius); margin-bottom: 20px;
+    border: 1px solid var(--line); background: var(--surface);
+    font-size: 14px; color: var(--muted);
+  }
+
+  .session .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--amber); }
+  .session .dot.live { background: #2F9E44; }
+  .session strong { color: var(--ink); font-weight: 600; }
+  .session code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 13px; letter-spacing: 0.08em; color: var(--ink);
+  }
+
+  .note-field { margin-top: 16px; }
+  .sent { margin-top: 18px; }
+
+  footer.footnote {
+    margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 13px; color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+  @media (max-width: 380px) {
+    .shell { padding: 16px 12px 84px; }
+    h1 { font-size: 26px; }
+    .route-name { font-size: 17.5px; }
+    table.grid tbody th { min-width: 108px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <p class="eyebrow" id="site-eyebrow">Site</p>
+    <h1>Shift Request</h1>
+    <p class="sub" id="page-sub">Pick a start time, see the routes on offer straight away, then request the one you want.</p>
+  </header>
+
+  <div class="session" id="session-bar" hidden></div>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-driver" aria-selected="true" aria-controls="view-driver">Driver</button>
+    <button type="button" role="tab" id="tab-planner" aria-selected="false" aria-controls="view-planner">Planner</button>
+  </nav>
+
+  <main>
+    <!-- ================= DRIVER ================= -->
+    <section id="view-driver" role="tabpanel" aria-labelledby="tab-driver">
+
+      <div class="step">
+        <label class="step-label" for="d-time">Start time</label>
+        <select id="d-time"></select>
+      </div>
+
+      <div class="step">
+        <label class="step-label" for="d-contract">Contract</label>
+        <select id="d-contract"></select>
+      </div>
+
+      <p class="count" id="d-count"></p>
+      <ul class="routes" id="d-routes"></ul>
+
+      <div class="panel" id="request-panel">
+        <h2>Request this route</h2>
+        <p class="hint" id="selected-line">No route picked yet. Tap one above, then submit.</p>
+        <div class="field-row">
+          <div>
+            <label class="step-label" for="req-name">Your name</label>
+            <input type="text" id="req-name" autocomplete="name" placeholder="Name as it appears on the schedule">
+          </div>
+          <div>
+            <label class="step-label" for="req-date">Date you want</label>
+            <input type="date" id="req-date">
+          </div>
+        </div>
+
+        <div class="note-field">
+          <label class="step-label" for="req-note">Anything to add, optional</label>
+          <input type="text" id="req-note" placeholder="Any note for the planner">
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="submit-btn" disabled>Submit request</button>
+          <button type="button" class="btn btn-sm" id="share-btn" hidden>Send it on</button>
+        </div>
+        <p class="status" id="copy-status" role="status"></p>
+
+        <div class="sent" id="sent-wrap" hidden>
+          <label class="step-label" for="req-text">Submitted from this phone</label>
+          <textarea id="req-text" readonly></textarea>
+        </div>
+      </div>
+
+      <div id="recent-wrap" hidden>
+        <h2>Your submitted requests</h2>
+        <ul class="data-list" id="recent-list"></ul>
+      </div>
+
+    </section>
+
+    <!-- ================= PLANNER ================= -->
+    <section id="view-planner" role="tabpanel" aria-labelledby="tab-planner" hidden>
+
+      <h2>Coverage</h2>
+      <p class="hint">Every contract against every start time. A blank cell means nothing is running on that contract at that time. Tap a cell to add a route for it.</p>
+      <div class="grid-wrap">
+        <table class="grid" id="coverage">
+          <thead><tr id="coverage-head"></tr></thead>
+          <tbody id="coverage-body"></tbody>
+        </table>
+      </div>
+
+      <h2>Start times</h2>
+      <p class="hint">These are the slots a driver can pick from. They can exist before any route does.</p>
+      <div class="field-row">
+        <div>
+          <label class="step-label" for="new-time">Add a start time</label>
+          <input type="time" id="new-time" value="04:15">
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-sm" id="add-time">Add start time</button>
+      </div>
+      <ul class="data-list" id="time-list"></ul>
+
+      <h2>Contracts</h2>
+      <p class="hint">The permanent list a driver chooses from. A contract with no routes stays on the list and simply shows nothing.</p>
+      <div class="field-row">
+        <div>
+          <label class="step-label" for="new-contract">Add a contract</label>
+          <input type="text" id="new-contract" placeholder="As spelled on the schedule">
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-sm" id="add-contract">Add contract</button>
+      </div>
+      <ul class="data-list" id="contract-list"></ul>
+
+      <h2 id="route-form-title">Add a route</h2>
+      <div class="field-row">
+        <div>
+          <label class="step-label" for="f-contract">Contract</label>
+          <select id="f-contract"></select>
+        </div>
+        <div>
+          <label class="step-label" for="f-time">Start time</label>
+          <select id="f-time"></select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="step-label" for="f-pattern">Trip pattern</label>
+        <select id="f-pattern">
+          <option value="direct">One trailer, all in one</option>
+          <option value="reload">Drop A, reload, drop B</option>
+        </select>
+      </div>
+
+      <div style="margin-top:14px">
+        <span class="step-label">Stops, in order</span>
+        <div id="stops"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-sm" id="add-stop">Add another stop</button>
+        </div>
+      </div>
+
+      <div style="margin-top:14px">
+        <label class="step-label" for="f-notes">Notes, optional</label>
+        <input type="text" id="f-notes" placeholder="Anything worth knowing about this run">
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="save-route">Add route</button>
+        <button type="button" class="btn btn-sm" id="cancel-edit" hidden>Cancel edit</button>
+      </div>
+      <p class="status" id="data-status" role="status"></p>
+
+      <h2>Routes on file</h2>
+      <ul class="data-list" id="route-list"></ul>
+
+      <h2>Requests</h2>
+      <p class="hint" id="requests-hint">Every request submitted on this device, with the device code that sent it.</p>
+      <ul class="data-list" id="planner-requests"></ul>
+
+      <h2>Backup</h2>
+      <p class="hint">Everything lives in this browser only. Export a copy before you change phone or browser, then import it on the new one.</p>
+      <div class="actions">
+        <button type="button" class="btn btn-sm" id="export-btn">Export a copy</button>
+        <button type="button" class="btn btn-sm" id="import-btn">Import a copy</button>
+        <button type="button" class="btn btn-sm btn-danger" id="reset-btn">Reset to the sample data</button>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="footnote">
+    <p>Real contract and route names live in this file and in this browser. Keep it off shared drives and public web hosts.</p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var DATA_KEY = 'shift-request:data:v1';
+  var REQ_KEY = 'shift-request:requests:v1';
+  var NAME_KEY = 'shift-request:name:v1';
+
+  var PATTERNS = {
+    direct: 'One trailer, all in one',
+    reload: 'Drop A, reload, drop B'
+  };
+
+  var ALL_CONTRACTS = '';
+
+  var SEED = {
+    site: 'Severn Beach',
+    contracts: ['TK MAXX', 'PALL', 'WICKES', 'DUNELM', 'B&M'],
+    timeSlots: ['04:15'],
+    routes: [
+      {
+        id: 'seed-1',
+        contract: 'TK MAXX',
+        startTime: '04:15',
+        pattern: 'direct',
+        stops: [
+          { code: '396', town: 'YEOVIL' },
+          { code: '441', town: 'BARNSTAPLE' }
+        ],
+        notes: 'One trailer, all in one.'
+      }
+    ]
+  };
+
+  function clone(value) { return JSON.parse(JSON.stringify(value)); }
+
+  function read(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      if (!raw) return clone(fallback);
+      var parsed = JSON.parse(raw);
+      return parsed === null || parsed === undefined ? clone(fallback) : parsed;
+    } catch (err) {
+      return clone(fallback);
+    }
+  }
+
+  function write(key, value) {
+    try { window.localStorage.setItem(key, JSON.stringify(value)); } catch (err) { /* storage unavailable */ }
+  }
+
+  function normalise(input) {
+    var source = input && typeof input === 'object' ? input : {};
+    var out = {
+      site: typeof source.site === 'string' && source.site ? source.site : SEED.site,
+      contracts: Array.isArray(source.contracts) ? source.contracts.filter(function (c) { return typeof c === 'string' && c.trim(); }) : [],
+      timeSlots: Array.isArray(source.timeSlots) ? source.timeSlots.filter(isTime) : [],
+      routes: Array.isArray(source.routes) ? source.routes.filter(function (r) { return r && r.contract && r.startTime; }) : []
+    };
+
+    if (!out.contracts.length) out.contracts = clone(SEED.contracts);
+    if (!out.routes.length && !out.timeSlots.length) return clone(SEED);
+
+    out.routes.forEach(function (route) {
+      if (!route.id) route.id = newId();
+      if (!Array.isArray(route.stops)) route.stops = [];
+      if (route.pattern !== 'reload') route.pattern = 'direct';
+      if (!route.notes) route.notes = '';
+      if (out.contracts.indexOf(route.contract) === -1) out.contracts.push(route.contract);
+      if (out.timeSlots.indexOf(route.startTime) === -1) out.timeSlots.push(route.startTime);
+    });
+
+    out.contracts = uniqueSorted(out.contracts);
+    out.timeSlots = out.timeSlots.sort();
+    return out;
+  }
+
+  function isTime(value) { return typeof value === 'string' && /^\d{2}:\d{2}$/.test(value); }
+
+  function uniqueSorted(list) {
+    var seen = {};
+    var out = [];
+    list.forEach(function (item) {
+      var key = String(item).trim();
+      if (!key || seen[key.toLowerCase()]) return;
+      seen[key.toLowerCase()] = true;
+      out.push(key);
+    });
+    return out.sort(function (a, b) { return a.localeCompare(b); });
+  }
+
+  function newId() { return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7); }
+
+  function $ (id) { return document.getElementById(id); }
+
+  var data = normalise(read(DATA_KEY, SEED));
+  var requests = read(REQ_KEY, []);
+  if (!Array.isArray(requests)) requests = [];
+
+  var selectedRouteId = null;
+  var editingRouteId = null;
+  var stopCounter = 1;
+
+  var DEVICE_KEY = 'shift-request:device:v1';
+  var session = { code: '' };
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function deviceCode() {
+    var code = '';
+    try { code = window.localStorage.getItem(DEVICE_KEY) || ''; } catch (err) { code = ''; }
+    if (!/^[A-Z0-9]{4}$/.test(code)) {
+      var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      code = '';
+      for (var i = 0; i < 4; i += 1) {
+        code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      }
+      try { window.localStorage.setItem(DEVICE_KEY, code); } catch (err) { /* storage unavailable */ }
+    }
+    return code;
+  }
+
+  function renderSession() {
+    session.code = deviceCode();
+    var bar = $('session-bar');
+    bar.innerHTML = '';
+    bar.hidden = false;
+
+    var dot = document.createElement('span');
+    dot.className = 'dot live';
+    bar.appendChild(dot);
+
+    var text = document.createElement('span');
+    text.innerHTML = 'This device is <code>' + escapeHtml(session.code) +
+      '</code>. Requests are saved here and appear on the planner side.';
+    bar.appendChild(text);
+  }
+
+  function routeLabel(route) {
+    if (!route || !Array.isArray(route.stops)) return 'Unnamed route';
+    var parts = route.stops
+      .filter(function (s) { return s && (s.code || s.town); })
+      .map(function (s) { return ((s.code || '') + ' ' + (s.town || '')).trim(); });
+    return parts.length ? parts.join(' > ') : 'Stops not set';
+  }
+
+  function dropWord(n) { return n === 1 ? '1 drop' : n + ' drops'; }
+
+  function matches(contract, time) {
+    return data.routes.filter(function (r) {
+      if (time && r.startTime !== time) return false;
+      if (contract && r.contract !== contract) return false;
+      return true;
+    }).sort(function (a, b) {
+      if (a.contract !== b.contract) return a.contract.localeCompare(b.contract);
+      return routeLabel(a).localeCompare(routeLabel(b));
+    });
+  }
+
+  function fillSelect(select, entries, keep) {
+    var previous = keep ? select.value : null;
+    select.innerHTML = '';
+    entries.forEach(function (entry) {
+      var opt = document.createElement('option');
+      opt.value = entry.value;
+      opt.textContent = entry.label;
+      select.appendChild(opt);
+    });
+    if (previous !== null) {
+      var found = entries.some(function (e) { return e.value === previous; });
+      if (found) select.value = previous;
+    }
+  }
+
+  // ---------------- driver ----------------
+
+  function renderDriverTimes() {
+    var entries = data.timeSlots.map(function (t) { return { value: t, label: t }; });
+    fillSelect($('d-time'), entries, true);
+  }
+
+  function renderDriverContracts() {
+    var entries = [{ value: ALL_CONTRACTS, label: 'All contracts' }];
+    data.contracts.forEach(function (c) { entries.push({ value: c, label: c }); });
+    fillSelect($('d-contract'), entries, true);
+  }
+
+  function renderDriverRoutes() {
+    var time = $('d-time').value;
+    var contract = $('d-contract').value;
+    var list = $('d-routes');
+    var count = $('d-count');
+
+    list.innerHTML = '';
+    count.textContent = '';
+    selectedRouteId = null;
+    setSelected(null);
+
+    var found = matches(contract, time);
+
+    if (!found.length) return;
+
+    var scope = contract ? contract : 'every contract';
+    count.textContent = found.length + (found.length === 1 ? ' route on ' : ' routes on ') +
+      scope + ' at ' + time + '.';
+
+    found.forEach(function (route) {
+      var li = document.createElement('li');
+      li.className = 'route';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'route-btn';
+      btn.setAttribute('aria-pressed', 'false');
+
+      var main = document.createElement('span');
+      main.className = 'route-main';
+
+      var name = document.createElement('span');
+      name.className = 'route-name';
+      name.textContent = routeLabel(route);
+
+      var meta = document.createElement('span');
+      meta.className = 'route-meta';
+      var stopTotal = (route.stops || []).length;
+      var bits = [route.contract, dropWord(stopTotal), PATTERNS[route.pattern] || PATTERNS.direct];
+      if (route.notes) bits.push(route.notes);
+      meta.textContent = bits.join(' \u00b7 ');
+
+      main.appendChild(name);
+      main.appendChild(meta);
+
+      var tick = document.createElement('span');
+      tick.className = 'route-tick';
+      tick.setAttribute('aria-hidden', 'true');
+      tick.textContent = '\u2713';
+
+      btn.appendChild(main);
+      btn.appendChild(tick);
+      btn.addEventListener('click', function () {
+        selectedRouteId = route.id;
+        Array.prototype.forEach.call(list.querySelectorAll('.route-btn'), function (el) {
+          el.setAttribute('aria-pressed', el === btn ? 'true' : 'false');
+        });
+        openPanel(route);
+      });
+
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  }
+
+  function tomorrowIso() {
+    var d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function currentRoute() {
+    for (var i = 0; i < data.routes.length; i += 1) {
+      if (data.routes[i].id === selectedRouteId) return data.routes[i];
+    }
+    return null;
+  }
+
+  function setSelected(route) {
+    $('submit-btn').disabled = !route;
+    $('share-btn').hidden = !route || !navigator.share;
+    $('sent-wrap').hidden = true;
+    $('copy-status').textContent = '';
+
+    if (!route) {
+      $('selected-line').textContent = 'No route picked yet. Tap one above, then submit.';
+      $('req-text').value = '';
+      return;
+    }
+
+    $('selected-line').textContent = 'Selected: ' + routeLabel(route) + ' \u00b7 ' +
+      route.contract + ' at ' + route.startTime;
+    if (!$('req-date').value) $('req-date').value = tomorrowIso();
+    try { $('req-name').value = window.localStorage.getItem(NAME_KEY) || ''; } catch (err) {}
+    buildText();
+  }
+
+  function openPanel(route) {
+    setSelected(route);
+    $('request-panel').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function buildText() {
+    var route = currentRoute();
+    if (!route) { $('req-text').value = ''; return ''; }
+    var name = $('req-name').value.trim() || '(your name)';
+    var date = $('req-date').value || tomorrowIso();
+    var stopTotal = (route.stops || []).length;
+    var text = [
+      'Shift request: ' + (data.site || 'site'),
+      'Name: ' + name,
+      'Date: ' + date,
+      'Contract: ' + route.contract,
+      'Start time: ' + route.startTime,
+      'Route: ' + routeLabel(route) + ' (' + dropWord(stopTotal) + ', ' + (PATTERNS[route.pattern] || PATTERNS.direct) + ')'
+    ].join('\n');
+    $('req-text').value = text;
+    return text;
+  }
+
+  function summaryLine(entry) {
+    return [
+      'Shift request: ' + (data.site || 'site'),
+      'Reference: ' + entry.id,
+      'Device: ' + session.code,
+      'Name: ' + entry.driverName,
+      'Date: ' + entry.date,
+      'Contract: ' + entry.contract,
+      'Start time: ' + entry.startTime,
+      'Route: ' + (entry.routeLabel || ''),
+      entry.note ? 'Note: ' + entry.note : ''
+    ].filter(Boolean).join('\n');
+  }
+
+  function submitRequest() {
+    var route = currentRoute();
+    if (!route) return;
+    var name = $('req-name').value.trim();
+    if (!name) { $('copy-status').textContent = 'Your name is needed before submitting.'; return; }
+
+    var entry = {
+      id: 'REQ-' + Date.now().toString(36).toUpperCase(),
+      device: session.code,
+      driverName: name,
+      routeId: route.id,
+      contract: route.contract,
+      startTime: route.startTime,
+      routeLabel: routeLabel(route),
+      date: $('req-date').value || tomorrowIso(),
+      note: $('req-note').value.trim(),
+      status: 'requested',
+      createdAt: new Date().toISOString()
+    };
+
+    requests.unshift(entry);
+    requests = requests.slice(0, 200);
+    write(REQ_KEY, requests);
+    try { window.localStorage.setItem(NAME_KEY, name); } catch (err) { /* storage unavailable */ }
+
+    $('req-text').value = summaryLine(entry);
+    $('sent-wrap').hidden = false;
+    $('copy-status').textContent = 'Submitted. It is recorded on this device.';
+    renderRequests();
+  }
+
+  function shareRequest() {
+    var text = $('req-text').value;
+    if (!text) return;
+    if (navigator.share) {
+      navigator.share({ title: 'Shift request', text: text }).catch(function () { /* cancelled */ });
+    } else {
+      $('copy-status').textContent = 'This browser cannot share. The text is below.';
+    }
+  }
+
+  function renderRequests() {
+    var own = $('recent-list');
+    own.innerHTML = '';
+    if (!requests.length) {
+      var empty = document.createElement('li');
+      empty.textContent = 'Nothing submitted from this device yet.';
+      own.appendChild(empty);
+    } else {
+      requests.forEach(function (r) {
+        var li = document.createElement('li');
+        var info = document.createElement('span');
+        info.className = 'info';
+        var title = document.createElement('span');
+        title.className = 'title';
+        title.textContent = r.routeLabel || r.label || 'Route';
+        var meta = document.createElement('span');
+        meta.className = 'meta';
+        meta.textContent = [r.contract, r.startTime, r.date, r.status].filter(Boolean).join(' \u00b7 ');
+        info.appendChild(title);
+        info.appendChild(meta);
+        li.appendChild(info);
+        own.appendChild(li);
+      });
+    }
+    $('recent-wrap').hidden = !requests.length;
+
+    var listEl = $('planner-requests');
+    listEl.innerHTML = '';
+    if (!requests.length) {
+      var none = document.createElement('li');
+      none.textContent = 'No requests yet.';
+      listEl.appendChild(none);
+      return;
+    }
+    requests.forEach(function (r) {
+      var li = document.createElement('li');
+      var info = document.createElement('span');
+      info.className = 'info';
+      var title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = r.routeLabel || 'Route';
+      var meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = [r.contract, r.startTime, r.date, r.driverName,
+        r.device ? 'device ' + r.device : '', r.status, r.note].filter(Boolean).join(' \u00b7 ');
+      info.appendChild(title);
+      info.appendChild(meta);
+      li.appendChild(info);
+      listEl.appendChild(li);
+    });
+  }
+
+  // ---------------- planner ----------------
+
+  function renderCoverage() {
+    var head = $('coverage-head');
+    var body = $('coverage-body');
+    head.innerHTML = '';
+    body.innerHTML = '';
+
+    var corner = document.createElement('th');
+    corner.textContent = 'Contract';
+    head.appendChild(corner);
+
+    data.timeSlots.forEach(function (t) {
+      var th = document.createElement('th');
+      th.textContent = t;
+      head.appendChild(th);
+    });
+
+    data.contracts.forEach(function (contract) {
+      var tr = document.createElement('tr');
+      var th = document.createElement('th');
+      th.scope = 'row';
+      th.textContent = contract;
+      tr.appendChild(th);
+
+      data.timeSlots.forEach(function (time) {
+        var td = document.createElement('td');
+        td.className = 'cell';
+        var n = matches(contract, time).length;
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cell-btn' + (n ? ' has' : ' empty');
+        btn.textContent = n ? String(n) : '\u00b7';
+        btn.setAttribute('aria-label',
+          n ? n + ' route(s) on ' + contract + ' at ' + time + '. Add another.'
+            : 'No routes on ' + contract + ' at ' + time + '. Add one.');
+        btn.addEventListener('click', function () { prefillRoute(contract, time); });
+        td.appendChild(btn);
+        tr.appendChild(td);
+      });
+
+      body.appendChild(tr);
+    });
+  }
+
+  function prefillRoute(contract, time) {
+    cancelEdit();
+    fillSelect($('f-contract'), data.contracts.map(function (c) { return { value: c, label: c }; }), false);
+    $('f-contract').value = contract;
+    fillSelect($('f-time'), data.timeSlots.map(function (t) { return { value: t, label: t }; }), false);
+    $('f-time').value = time;
+    $('route-form-title').textContent = 'Add a route for ' + contract + ' at ' + time;
+    $('route-form-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function renderTimes() {
+    var list = $('time-list');
+    list.innerHTML = '';
+    if (!data.timeSlots.length) {
+      var li = document.createElement('li');
+      li.textContent = 'No start times yet.';
+      list.appendChild(li);
+    }
+    data.timeSlots.forEach(function (time) {
+      var used = matches(null, time).length;
+      var li = document.createElement('li');
+      var info = document.createElement('span');
+      info.className = 'info';
+      var title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = time;
+      var meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = used ? (used === 1 ? '1 route' : used + ' routes') : '';
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-sm btn-danger';
+      del.textContent = 'Remove';
+      del.addEventListener('click', function () {
+        var routesUsing = matches(null, time);
+        var message = routesUsing.length
+          ? 'Remove ' + time + '? ' + routesUsing.length + ' route(s) use this slot and will be removed too.'
+          : 'Remove ' + time + '?';
+        if (!window.confirm(message)) return;
+        data.timeSlots = data.timeSlots.filter(function (t) { return t !== time; });
+        data.routes = data.routes.filter(function (r) { return r.startTime !== time; });
+        persist();
+        renderAll();
+        setStatus('data-status', time + ' removed.');
+      });
+
+      li.appendChild(info);
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  function renderContracts() {
+    var list = $('contract-list');
+    list.innerHTML = '';
+
+    if (!data.contracts.length) {
+      var blank = document.createElement('li');
+      blank.textContent = 'No contracts yet.';
+      list.appendChild(blank);
+    }
+
+    data.contracts.forEach(function (name) {
+      var count = data.routes.filter(function (r) { return r.contract === name; }).length;
+      var li = document.createElement('li');
+      var info = document.createElement('span');
+      info.className = 'info';
+      var title = document.createElement('span');
+      title.className = 'title' + (count ? '' : ' subdued');
+      title.textContent = name;
+      var meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = count ? (count === 1 ? '1 route' : count + ' routes') : '';
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-sm btn-danger';
+      del.textContent = 'Remove';
+      del.addEventListener('click', function () {
+        var message = count
+          ? 'Remove ' + name + '? Its ' + count + ' route(s) will be removed too.'
+          : 'Remove ' + name + ' from the list?';
+        if (!window.confirm(message)) return;
+        data.contracts = data.contracts.filter(function (c) { return c !== name; });
+        data.routes = data.routes.filter(function (r) { return r.contract !== name; });
+        persist();
+        renderAll();
+        setStatus('data-status', name + ' removed.');
+      });
+
+      li.appendChild(info);
+      li.appendChild(del);
+      list.appendChild(li);
+    });
+  }
+
+  function renderRouteForm() {
+    fillSelect($('f-contract'), data.contracts.map(function (c) { return { value: c, label: c }; }), true);
+    fillSelect($('f-time'), data.timeSlots.map(function (t) { return { value: t, label: t }; }), true);
+  }
+
+  function renderRouteList() {
+    var list = $('route-list');
+    list.innerHTML = '';
+    if (!data.routes.length) {
+      var blank = document.createElement('li');
+      blank.textContent = 'No routes yet.';
+      list.appendChild(blank);
+      return;
+    }
+
+    var sorted = data.routes.slice().sort(function (a, b) {
+      if (a.contract !== b.contract) return a.contract.localeCompare(b.contract);
+      if (a.startTime !== b.startTime) return a.startTime.localeCompare(b.startTime);
+      return routeLabel(a).localeCompare(routeLabel(b));
+    });
+
+    sorted.forEach(function (route) {
+      var li = document.createElement('li');
+      var info = document.createElement('span');
+      info.className = 'info';
+      var title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = routeLabel(route);
+      var meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = [route.contract, route.startTime, PATTERNS[route.pattern] || PATTERNS.direct].join(' \u00b7 ');
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      var tools = document.createElement('span');
+      tools.style.display = 'flex';
+      tools.style.gap = '8px';
+
+      var edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'btn btn-sm';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', function () { startEdit(route); });
+
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn btn-sm btn-danger';
+      del.textContent = 'Remove';
+      del.addEventListener('click', function () {
+        if (!window.confirm('Remove ' + routeLabel(route) + '?')) return;
+        data.routes = data.routes.filter(function (r) { return r.id !== route.id; });
+        persist();
+        renderAll();
+        setStatus('data-status', 'Route removed.');
+      });
+
+      tools.appendChild(edit);
+      tools.appendChild(del);
+      li.appendChild(info);
+      li.appendChild(tools);
+      list.appendChild(li);
+    });
+  }
+
+  function stopRow(index, stop) {
+    var row = document.createElement('div');
+    row.className = 'stop-row';
+
+    var code = document.createElement('input');
+    code.type = 'text';
+    code.className = 'code';
+    code.placeholder = 'Store';
+    code.setAttribute('aria-label', 'Stop ' + (index + 1) + ' store number');
+    code.value = (stop && stop.code) || '';
+
+    var town = document.createElement('input');
+    town.type = 'text';
+    town.className = 'town';
+    town.placeholder = 'Town';
+    town.setAttribute('aria-label', 'Stop ' + (index + 1) + ' town');
+    town.value = (stop && stop.town) || '';
+
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'btn btn-sm btn-danger';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', function () {
+      if ($('stops').querySelectorAll('.stop-row').length <= 1) return;
+      row.remove();
+    });
+
+    row.appendChild(code);
+    row.appendChild(town);
+    row.appendChild(remove);
+    return row;
+  }
+
+  function renderStops(stops) {
+    var wrap = $('stops');
+    wrap.innerHTML = '';
+    var list = (stops && stops.length) ? stops : [{ code: '', town: '' }];
+    list.forEach(function (s, i) { wrap.appendChild(stopRow(i, s)); });
+    stopCounter = list.length;
+  }
+
+  function collectStops() {
+    var rows = $('stops').querySelectorAll('.stop-row');
+    var out = [];
+    Array.prototype.forEach.call(rows, function (row) {
+      var code = row.querySelector('.code').value.trim();
+      var town = row.querySelector('.town').value.trim();
+      if (code || town) out.push({ code: code, town: town });
+    });
+    return out;
+  }
+
+  function startEdit(route) {
+    editingRouteId = route.id;
+    $('route-form-title').textContent = 'Edit route';
+    $('save-route').textContent = 'Save changes';
+    $('cancel-edit').hidden = false;
+    renderRouteForm();
+    $('f-contract').value = route.contract;
+    $('f-time').value = route.startTime;
+    $('f-pattern').value = route.pattern || 'direct';
+    $('f-notes').value = route.notes || '';
+    renderStops(route.stops);
+    $('route-form-title').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    editingRouteId = null;
+    $('route-form-title').textContent = 'Add a route';
+    $('save-route').textContent = 'Add route';
+    $('cancel-edit').hidden = true;
+    $('f-pattern').value = 'direct';
+    $('f-notes').value = '';
+    renderStops(null);
+    renderRouteForm();
+  }
+
+  function saveRoute() {
+    var contract = $('f-contract').value;
+    var time = $('f-time').value;
+    var stops = collectStops();
+
+    if (!contract) { setStatus('data-status', 'Choose or add a contract first.'); return; }
+    if (!time) { setStatus('data-status', 'Add a start time first.'); return; }
+    if (!stops.length) { setStatus('data-status', 'At least one stop is needed.'); return; }
+
+    if (editingRouteId) {
+      data.routes = data.routes.map(function (r) {
+        if (r.id !== editingRouteId) return r;
+        return { id: r.id, contract: contract, startTime: time, pattern: $('f-pattern').value, stops: stops, notes: $('f-notes').value.trim() };
+      });
+      setStatus('data-status', 'Route updated.');
+      cancelEdit();
+    } else {
+      data.routes.push({
+        id: newId(),
+        contract: contract,
+        startTime: time,
+        pattern: $('f-pattern').value,
+        stops: stops,
+        notes: $('f-notes').value.trim()
+      });
+      setStatus('data-status', 'Route added.');
+      $('f-notes').value = '';
+      renderStops(null);
+    }
+
+    if (data.timeSlots.indexOf(time) === -1) data.timeSlots.push(time);
+    if (data.contracts.indexOf(contract) === -1) data.contracts.push(contract);
+    data.timeSlots.sort();
+    data.contracts = uniqueSorted(data.contracts);
+
+    persist();
+    renderAll();
+  }
+
+  function persist() { write(DATA_KEY, data); }
+
+  function setStatus(id, message) {
+    var el = $(id);
+    el.textContent = message;
+    window.setTimeout(function () { if (el.textContent === message) el.textContent = ''; }, 4000);
+  }
+
+  function exportData() {
+    var payload = JSON.stringify(data, null, 2);
+    var blob = new Blob([payload], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'shift-request-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    setStatus('data-status', 'Backup downloaded.');
+  }
+
+  function importData() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var parsed = JSON.parse(String(reader.result));
+          if (!parsed || !Array.isArray(parsed.contracts) || !Array.isArray(parsed.routes)) {
+            setStatus('data-status', 'That file is not a backup from this tool.');
+            return;
+          }
+          data = normalise(parsed);
+          persist();
+          cancelEdit();
+          renderAll();
+          setStatus('data-status', 'Backup loaded.');
+        } catch (err) {
+          setStatus('data-status', 'That file could not be read.');
+        }
+      };
+      reader.readAsText(file);
+    });
+    input.click();
+  }
+
+  function renderAll() {
+    renderDriverTimes();
+    renderDriverContracts();
+    renderDriverRoutes();
+    renderTimes();
+    renderContracts();
+    renderRouteForm();
+    renderRouteList();
+    renderCoverage();
+    renderRequests();
+    $('site-eyebrow').textContent = data.site || 'Site';
+  }
+
+  function selectTab(which) {
+    var driver = which === 'driver';
+    $('tab-driver').setAttribute('aria-selected', driver ? 'true' : 'false');
+    $('tab-planner').setAttribute('aria-selected', driver ? 'false' : 'true');
+    $('view-driver').hidden = !driver;
+    $('view-planner').hidden = driver;
+    $('page-sub').textContent = driver
+      ? 'Pick a start time, see the routes on offer straight away, then request the one you want.'
+      : 'Every contract against every start time. Blank means nothing is running.';
+  }
+
+  // ---------------- wiring ----------------
+
+  $('tab-driver').addEventListener('click', function () { selectTab('driver'); });
+  $('tab-planner').addEventListener('click', function () { selectTab('planner'); });
+
+  $('d-time').addEventListener('change', renderDriverRoutes);
+  $('d-contract').addEventListener('change', renderDriverRoutes);
+  $('req-name').addEventListener('input', buildText);
+  $('req-date').addEventListener('change', buildText);
+  $('submit-btn').addEventListener('click', submitRequest);
+  $('share-btn').addEventListener('click', shareRequest);
+
+  $('add-time').addEventListener('click', function () {
+    var time = $('new-time').value;
+    if (!isTime(time)) { setStatus('data-status', 'Pick a start time first.'); return; }
+    if (data.timeSlots.indexOf(time) !== -1) { setStatus('data-status', time + ' is already on the list.'); return; }
+    data.timeSlots.push(time);
+    data.timeSlots.sort();
+    persist();
+    renderAll();
+    setStatus('data-status', time + ' added as a start time.');
+  });
+
+  $('add-contract').addEventListener('click', function () {
+    var name = $('new-contract').value.trim();
+    if (!name) { setStatus('data-status', 'Type a contract name first.'); return; }
+    var exists = data.contracts.some(function (c) { return c.toLowerCase() === name.toLowerCase(); });
+    if (exists) { setStatus('data-status', name + ' is already on the list.'); return; }
+    data.contracts.push(name);
+    data.contracts = uniqueSorted(data.contracts);
+    persist();
+    $('new-contract').value = '';
+    renderAll();
+    setStatus('data-status', name + ' added.');
+  });
+
+  $('add-stop').addEventListener('click', function () {
+    stopCounter += 1;
+    $('stops').appendChild(stopRow(stopCounter - 1, null));
+  });
+
+  $('save-route').addEventListener('click', saveRoute);
+  $('cancel-edit').addEventListener('click', cancelEdit);
+  $('export-btn').addEventListener('click', exportData);
+  $('import-btn').addEventListener('click', importData);
+  $('reset-btn').addEventListener('click', function () {
+    if (!window.confirm('Replace everything with the sample data?')) return;
+    data = clone(SEED);
+    persist();
+    cancelEdit();
+    renderAll();
+    setStatus('data-status', 'Reset to the sample data.');
+  });
+
+  renderStops(null);
+  renderAll();
+  selectTab('driver');
+
+  renderSession();
+})();
+</script>
+</body>
+</html>
